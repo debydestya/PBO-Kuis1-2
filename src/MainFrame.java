@@ -2,8 +2,12 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import static java.lang.Math.toIntExact;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -32,15 +36,18 @@ public class MainFrame extends javax.swing.JFrame {
     String nol_jam ="";
     String nol_menit="";
     String nol_detik="";
-
+    
     /**
      * Creates new form MainFrame
      */
-    public MainFrame() {
+    public MainFrame(String user) {
         initComponents();
         selectData();
         setJam();
         setTanggal();
+        
+        Nama.setText(user);
+        
     }
 
     /**
@@ -81,6 +88,10 @@ public class MainFrame extends javax.swing.JFrame {
         btPrint1 = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
+        DateOut = new com.toedter.calendar.JDateChooser();
+        DateIn = new com.toedter.calendar.JDateChooser();
+        jLabel11 = new javax.swing.JLabel();
+        btSearch = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
 
@@ -165,7 +176,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tbData);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 70, 560, 420));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 110, 560, 380));
 
         btSave.setText("SAVE");
         btSave.addActionListener(new java.awt.event.ActionListener() {
@@ -217,16 +228,31 @@ public class MainFrame extends javax.swing.JFrame {
 
         jPanel2.setBackground(new java.awt.Color(255, 204, 153));
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel2.add(DateOut, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 10, 150, 30));
+        jPanel2.add(DateIn, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 150, 30));
+
+        jLabel11.setText("TO");
+        jPanel2.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 20, -1, -1));
+
+        btSearch.setText("SEARCH");
+        btSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btSearchActionPerformed(evt);
+            }
+        });
+        jPanel2.add(btSearch, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 10, 110, 30));
+
         getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 60, 590, 480));
 
-        jPanel3.setBackground(new java.awt.Color(153, 153, 255));
+        jPanel3.setBackground(new java.awt.Color(43, 209, 179));
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel9.setFont(new java.awt.Font("Wednesday", 1, 36)); // NOI18N
+        jLabel9.setFont(new java.awt.Font("Double•Bubble Shadow", 1, 36)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(255, 255, 255));
         jLabel9.setText("NAFFA MOTORCYCLE RENTAL");
-        jPanel3.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 470, 30));
+        jPanel3.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 510, 30));
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 890, 60));
 
@@ -368,6 +394,46 @@ public class MainFrame extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_btPrint1ActionPerformed
 
+    private void btSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btSearchActionPerformed
+        // TODO add your handling code here:
+        PreparedStatement ps;
+        Connection connection;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String tgl_msk = dateFormat.format(DateIn.getDate());
+        String tgl_keluar = dateFormat.format(DateOut.getDate());
+    
+        
+        try{
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/db_utspbo?zeroDateTimeBehavior=convertToNull", "root", "");
+            String kolom[] = {"NoStruk","NoPol","Nama","Alamat","TanggalPinjam","TanggalKembali","Harga"};
+            DefaultTableModel dtm = new DefaultTableModel(null,kolom);
+            ps = connection.prepareStatement("SELECT `NoStruk`,`NoPol`,`Nama`,`Alamat`,`TanggalPinjam`,`TanggalKembali`,`Harga` FROM `tb_sewa` WHERE TanggalPinjam = ? AND TanggalKembali = ?");
+            ps.setString(1, tgl_msk);
+            ps.setString(2, tgl_keluar);
+            ResultSet rs = ps.executeQuery();
+            
+            try{
+                while(rs.next())
+                {
+                String NoStruk = rs.getString(1);
+                String NoPol = rs.getString(2);
+                String Nama = rs.getString(3);
+                String Alamat = rs.getString(4);
+                String TanggalPinjam = rs.getString(5);
+                String TanggalKembali = rs.getString(6);
+                String Harga = rs.getString(7);
+                String data[] = {NoStruk,NoPol,Nama,Alamat,TanggalPinjam,TanggalKembali,Harga};
+                dtm.addRow(data);   
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE,null,ex);
+            } tbData.setModel(dtm);
+        } catch (SQLException ex){
+            JOptionPane.showMessageDialog(rootPane, "Gagal");
+        }
+        
+    }//GEN-LAST:event_btSearchActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -398,13 +464,16 @@ public class MainFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainFrame().setVisible(true);
+                String user = null;
+                new MainFrame(user).setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField Alamat;
+    private com.toedter.calendar.JDateChooser DateIn;
+    private com.toedter.calendar.JDateChooser DateOut;
     private javax.swing.JTextField Harga;
     private javax.swing.JLabel Jam;
     private com.toedter.calendar.JDateChooser Kembali;
@@ -420,8 +489,10 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton btPrint;
     private javax.swing.JButton btPrint1;
     private javax.swing.JButton btSave;
+    private javax.swing.JButton btSearch;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

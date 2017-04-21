@@ -18,6 +18,8 @@ import javax.swing.JOptionPane;
  * @author LUCKY
  */
 public class Login extends javax.swing.JFrame {
+    
+    public static String user;
 
     /**
      * Creates new form Login
@@ -139,9 +141,10 @@ public class Login extends javax.swing.JFrame {
             ps.setString(1, tfUser.getText());
             ps.setString(2, tfPass.getText());
             ResultSet result = ps.executeQuery();
+            String user = tfUser.getText();
             if(result.next())
-            {
-                new MainFrame().show();
+            {    
+                new MainFrame(user).show();
                 this.dispose();
             }
             else
